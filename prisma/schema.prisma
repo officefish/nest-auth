@@ -1,0 +1,158 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(uuid())
+  name          String?
+  surname       String?
+  email         String         @unique
+  password      String
+  wallets       Wallet[]
+  projects      Project[]
+  role          Role           @default(OWNER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  avatar        String?
+  settings      Settings?
+  notifications Notifications?
+}
+
+model Wallet {
+  id           String        @id @default(uuid())
+  balance      Decimal       @default(0)
+  transactions Transaction[]
+  user         User          @relation(fields: [userId], references: [id])
+  userId       String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  Project      Project       @relation(fields: [projectId], references: [id])
+  projectId    String
+}
+
+model Transaction {
+  id          Int               @id @default(autoincrement())
+  amount      Decimal
+  description String
+  wallet      Wallet            @relation(fields: [walletId], references: [id])
+  walletId    String
+  type        TransactionType   @default(INCOME)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  doneAt      DateTime?
+  status      TransactionStatus @default(PENDING)
+  coin        Coin
+  adress      String
+}
+
+model Project {
+  id         String        @id @default(uuid())
+  name       String
+  user       User          @relation(fields: [userId], references: [id])
+  userId     String
+  wallets    Wallet[]
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  link       String        @unique
+  status     ProjectStatus @default(NOT_APPROVED)
+  currencies Coin[]
+}
+
+model Settings {
+  id        String  @id @default(uuid())
+  phone     String? @unique
+  telegram  Boolean @default(false)
+  google    Boolean @default(false)
+  apple     Boolean @default(false)
+  yandex    Boolean @default(false)
+  email     Boolean @default(false)
+  twoFactor Boolean @default(false)
+  sms       Boolean @default(false)
+  apiKey    String?
+  user      User    @relation(fields: [userId], references: [id])
+  userId    String  @unique
+}
+
+model Notifications {
+  id                 String  @id @default(uuid())
+  isSignetIn         Boolean @default(false)
+  isPhoneNumberPined Boolean @default(false)
+  isEmailPined       Boolean @default(false)
+  isPasswordChanged  Boolean @default(false)
+  isTwoFactorEnabled Boolean @default(false)
+  isApiCreated       Boolean @default(false)
+  user               User    @relation(fields: [userId], references: [id])
+  userId             String  @unique
+}
+
+enum Role {
+  OWNER
+  SUPPORT
+  DEVELOPER
+  ACCOUNTANT
+  ADMINISTRATOR
+}
+
+enum Coin {
+  USDT
+  BTC
+  ETH
+  FTM
+  XMR
+}
+
+enum TransactionType {
+  INCOME
+  PAYOUT
+}
+
+enum TransactionStatus {
+  PENDING
+  DONE
+  CANCELED
+  FAILED
+}
+
+enum ProjectStatus {
+  ACTIVE
+  BLOCKED
+  NOT_APPROVED
+}
+
+// import { PrismaClient } from '@prisma/client/edge'
+// const prisma = new PrismaClient()
+// npx prisma generate
+// npx prisma migrate dev
+// npx prisma db push
+// npx prisma db seed
+// npx prisma studio
+// select: { wallet: true }
+// include: { wallet: true }
+// distinct 
+// take 2
+// skip 1
+// orderBy: { id: 'asc' }
+// orderBy: { id: 'desc' }
+// orderBy: { id: 'asc', name: 'desc' }
+// where equals
+// where not
+// where  name {in: ['John', 'Jane']}
+// where  name {notIn: ['John', 'Jane']}
+// where age {lt: 20} lte
+// where age {gt: 20} gte
+// where email {contains: 'foo'}
+// where email {startsWith: 'foo'}
+// where email {endsWith: 'foo'}
+// where name {mode: insensitive}
+// where name {not: {mode: insensitive}}
+// where AND
+// where OR
+// where NOT
